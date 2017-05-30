@@ -27,7 +27,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.bmuschko:gradle-docker-plugin:2.6.1'
+        classpath 'com.bmuschko:gradle-docker-plugin:3.0.7'
     }
 }
 
@@ -75,7 +75,7 @@ task buildRMDocker(type: DockerBuildImage) {
     }  
     inputDir = file('.')
     if(!project.hasProperty('dockerTag')) {
-        tag = 'mesos/myriad'
+        tag = 'mikeoriole/myriad'
     } else {
         tag = dockerTag
     }

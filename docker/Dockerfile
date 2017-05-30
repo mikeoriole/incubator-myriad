@@ -19,7 +19,7 @@
 #
 # VERSION 0.1.0
 
-FROM debian
+FROM centos:7
 MAINTAINER Apache Myriad dev@myriad.incubator.apache.org
 
 ENV YARN_USER="yarn"
@@ -28,30 +28,41 @@ ENV HADOOP_GROUP="hadoop"
 ENV HADOOP_GID="112"
 ENV YARN_GROUP="yarn"
 ENV YARN_GID="113"
-ENV HADOOP_VER="2.7.0"
+ENV HADOOP_VER="2.7.1"
 ENV HADOOP_HOME=/usr/local/hadoop
 ENV JAVA_HOME=/usr
 ENV MESOS_NATIVE_LIBRARY=/usr/local/lib/libmesos.so
-ENV MESOS_VER=0.28.1
+ENV MESOS_VER=1.2.0
+
+COPY yumrepos/* /etc/yum.repos.d/
+COPY gpgkey/*  /etc/pki/rpm-gpg/
+COPY hadoop-2.7.1.tar.gz /root/
 
 # Setup mesosphere repositories
-RUN apt-get -y update
-RUN apt-get install -y openjdk-7-jre-headless wget lsb-release
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv E56151BF
-RUN DISTRO=$(lsb_release -is | tr '[:upper:]' '[:lower:]') CODENAME=$(lsb_release -cs) && echo "deb http://repos.mesosphere.com/${DISTRO} ${CODENAME} main" | tee /etc/apt/sources.list.d/mesosphere.list
-RUN apt-get -y update
+RUN yum -y update
+RUN yum install -y java-1.7.0-openjdk-devel.x86_64 wget redhat-lsb which mesos curl tar
 
-# Install Mesos
-RUN apt-get install -y mesos=`apt-cache madison mesos | grep $MESOS_VER | head -1 | awk {'print $3'}` curl tar
+
 # Run local YARN install
 ADD myriad-bin/install-yarn.sh /install-yarn.sh
 RUN sh /install-yarn.sh
 ADD myriad-bin/configure-yarn.sh /configure-yarn.sh
 RUN /configure-yarn.sh
+
 # Copy over myriad libraries
 ADD ./libs/* /usr/local/hadoop/share/hadoop/yarn/lib/
+
 # Initialize hadoop confs with env vars
 ADD myriad-etc/* /usr/local/hadoop/etc/hadoop/
 RUN chown -R root:root /usr/local/hadoop/etc
-USER yarn
-CMD /usr/local/hadoop/bin/yarn resourcemanager
+
+# Initialize hadoop confs with env vars
+ADD myriad-bin/run-myriad.sh /run-myriad.sh
+RUN mkdir /myriad-conf/ && chmod -R 777 /usr/local/hadoop/etc/hadoop/ && cp /usr/local/hadoop/etc/hadoop/* /myriad-conf/
+
+#Configure directory permissions for yarn
+RUN mkdir /var/yarn/ && mkdir /var/yarn/rm/ && mkdir /var/yarn/rm/system/ && mkdir /var/yarn/rm/system/FSRMStateRoot && chown -R yarn:yarn /var/yarn
+
+# Run the YARN resource manager
+USER root
+CMD sh /run-myriad.sh

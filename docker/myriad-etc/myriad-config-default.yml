@@ -1,0 +1,51 @@
+mesosMaster: leader.mesos:5050
+containerInfo:
+    type: DOCKER
+    dockerInfo:
+        image: mikeoriole/myriad
+    volume:
+        -
+          containerPath: /tmp
+          hostPath: /tmp
+checkpoint: false
+frameworkFailoverTimeout: 43200000
+frameworkName: MyriadAlpha
+frameworkRole: 
+frameworkUser: yarn
+nativeLibrary: /usr/local/lib/libmesos.so
+zkServers: leader.mesos:2181
+zkTimeout: 20000
+restApiPort: 8192
+profiles:
+  zero:  
+    cpu: 0
+    mem: 0
+  small:
+    cpu: 2
+    mem: 2048
+  medium:
+    cpu: 4
+    mem: 4096
+  large:
+    cpu: 10
+    mem: 12288
+nmInstances: 
+  small: 1 
+rebalancer: false
+haEnabled: false
+nodemanager:
+  jvmMaxMemoryMB: 1024
+  cpus: 0.2
+  cgroups: false
+executor:
+  jvmMaxMemoryMB: 256
+  nodeManagerUri: http://10.1.10.107:30681/myriad/hadoop-2.7.1.tar.gz
+yarnEnvironment:
+  YARN_HOME: /usr/local/hadoop
+  JAVA_HOME: /usr
+  JAVA_LIBRARY_PATH: /opt/mesosphere/lib
+  HADOOP_CONF_DIR: /mnt/mesos/sandbox/config
+  HADOOP_TMP_DIR: /tmp
+  HADOOP_LOG_DIR: /mnt/mesos/sandbox
+mesosAuthenticationPrincipal:
+mesosAuthenticationSecretFilename:
